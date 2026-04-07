@@ -1,4 +1,4 @@
-# MoxieMetrx Examples
+# moxiemetrx Examples
 
 Open-source demos built with the [MoxieMetrx API](https://moxiemetrx.com) — real-time crypto-to-fiat exchange rates for African markets.
 

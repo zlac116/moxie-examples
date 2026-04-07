@@ -4,16 +4,18 @@ Get live African crypto-fiat rates auto-refreshing in your Google Sheet.
 
 ## Setup (2 minutes)
 
+```bash
+git clone https://github.com/zlac116/moxie-examples.git
+cd moxie-examples/google-sheets-dashboard
+cat script.gs  # Copy this code
+```
+
 1. Get a free API key at [moxiemetrx.com/signup](https://moxiemetrx.com/signup)
-2. Open Google Sheets → Extensions → Apps Script
-3. Paste the code from `script.gs` below
+2. Open a new Google Sheet → Extensions → Apps Script
+3. Delete everything in the editor and paste the contents of `script.gs`
 4. Replace `YOUR_API_KEY_HERE` with your key
-5. Click Run → `getMoxieRates`
+5. Click Run → `getMoxieRates` → Approve permissions when prompted
 6. (Optional) Run `createTrigger` once for auto-refresh every 5 minutes
-
-## The Script
-
-See `script.gs` in this directory.
 
 ## What You Get
 

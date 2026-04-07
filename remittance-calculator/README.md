@@ -8,12 +8,23 @@ Compare the real cost of sending money to Africa via crypto (USDT) vs traditiona
 
 ## Run Locally
 
+```bash
+git clone https://github.com/zlac116/moxie-examples.git
+cd moxie-examples/remittance-calculator
+```
+
 1. Get a free API key at [moxiemetrx.com/signup](https://moxiemetrx.com/signup)
 2. Open `index.html` in a text editor
 3. Replace `YOUR_API_KEY_HERE` with your key
 4. Open `index.html` in a browser
 
-No build step, no dependencies — just one HTML file.
+No build step, no dependencies, no server — just one HTML file.
+
+```bash
+# Or serve with Python
+python3 -m http.server 8080
+# Open http://localhost:8080
+```
 
 ## How It Works
 
