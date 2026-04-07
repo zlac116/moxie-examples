@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Exchange Arbitrage Scanner — moxiemetrx</title>
+    <meta name="description" content="Live cross-exchange price spreads across 7 African exchanges. See where BTC/NGN, USDT/ZAR and other pairs price differently in real time.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f172a; --surface: #1e293b; --border: #334155;
+            --text: #f8fafc; --text-secondary: #94a3b8;
+            --accent: #38bdf8; --green: #22c55e; --yellow: #eab308; --red: #ef4444;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; }
+        a { color: #7dd3fc; text-underline-offset: 2px; }
+        .container { max-width: 760px; margin: 0 auto; padding: 40px 24px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .logo { font-size: 18px; font-weight: 700; color: var(--text); text-decoration: none; }
+        .logo span { color: var(--accent); }
+        .back-link { font-size: 14px; color: var(--text-secondary); text-decoration: none; }
+
+        h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+        .subtitle { font-size: 14px; color: #cbd5e1; margin-bottom: 8px; }
+        .last-updated { font-size: 12px; color: var(--text-secondary); margin-bottom: 24px; }
+        .live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+        .sort-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+        .sort-btn {
+            padding: 6px 14px; font-family: var(--font); font-size: 12px; font-weight: 500;
+            border: 1px solid var(--border); border-radius: 6px; background: transparent;
+            color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+        }
+        .sort-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .sort-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(56,189,248,0.1); }
+
+        .opp-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+            padding: 16px 20px; margin-bottom: 10px; transition: border-color 0.15s;
+        }
+        .opp-card:hover { border-color: var(--accent); }
+        .opp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .opp-pair { font-size: 16px; font-weight: 700; }
+        .opp-spread { font-size: 20px; font-weight: 800; }
+
+        .opp-detail { display: flex; gap: 16px; margin-bottom: 10px; }
+        .opp-side { flex: 1; background: #0a0e14; border-radius: 8px; padding: 10px 14px; }
+        .opp-side-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .buy-label { color: var(--green); }
+        .sell-label { color: var(--red); }
+        .opp-exchange { font-size: 13px; font-weight: 600; color: var(--text); }
+        .opp-price { font-size: 12px; font-family: 'SF Mono', monospace; color: #cbd5e1; margin-top: 2px; }
+
+        .opp-meta { display: flex; gap: 16px; font-size: 11px; color: var(--text-secondary); }
+        .opp-sources { }
+
+        .bar-bg { height: 6px; background: #0a0e14; border-radius: 3px; overflow: hidden; margin-top: 10px; }
+        .bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+
+        .disclaimer { font-size: 11px; color: var(--text-secondary); margin-top: 24px; line-height: 1.5;
+            padding: 12px 16px; background: rgba(239,68,68,0.06); border-left: 3px solid var(--red); border-radius: 0 6px 6px 0; }
+
+        .cta { text-align: center; margin: 24px 0 16px; }
+        .cta-btn {
+            display: inline-block; padding: 10px 24px; background: var(--accent); color: #0f172a;
+            font-weight: 700; font-size: 13px; border-radius: 8px; text-decoration: none; transition: all 0.15s;
+        }
+        .cta-btn:hover { background: #7dd3fc; transform: translateY(-1px); }
+
+        .footer { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; }
+        .footer a { color: var(--text-secondary); margin: 0 10px; text-decoration: none; }
+        .footer a:hover { color: var(--text); }
+
+        .loading { text-align: center; padding: 48px; color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <a href="/" class="logo">moxie<span>metrx</span></a>
+        <a href="https://moxiemetrx.com/demos" class="back-link">&larr; Demos</a>
+    </div>
+
+    <h1>Cross-Exchange Arbitrage Scanner</h1>
+    <p class="subtitle">Live price spreads across 7 African exchanges. Sorted by opportunity size.</p>
+    <div class="last-updated"><span class="live-dot"></span><span id="update-time">Loading...</span></div>
+
+    <div class="sort-bar">
+        <button class="sort-btn active" onclick="sortBy('spread')">Highest Spread</button>
+        <button class="sort-btn" onclick="sortBy('pair')">By Pair</button>
+        <button class="sort-btn" onclick="sortBy('sources')">Most Sources</button>
+    </div>
+
+    <div id="cards">
+        <div class="loading">Scanning 7 exchanges for arbitrage opportunities...</div>
+    </div>
+
+    <div class="disclaimer">
+        <strong>Not financial advice.</strong> These spreads are based on displayed mid-market prices, not executable order book prices.
+        Actual execution includes exchange fees (0.1-0.5%), withdrawal fees, transfer time (10-60 min), and slippage.
+        A 2% displayed spread may yield 0-1% after all costs. Always verify liquidity before trading.
+    </div>
+
+    <div class="cta">
+        <a href="https://moxiemetrx.com/signup" class="cta-btn">Get API Key — Build Your Own Scanner</a>
+    </div>
+
+    <div class="footer">
+        <a href="/">Home</a>
+        <a href="https://docs.moxiemetrx.com">Docs</a>
+        <a href="https://docs.moxiemetrx.com/blog">Research</a>
+        <a href="https://moxiemetrx.com/demos">Demos</a>
+    </div>
+</div>
+
+<script>
+    var API_KEY = 'YOUR_API_KEY_HERE';
+    var ALL_PAIRS = 'BTCNGN,BTCZAR,ETHNGN,ETHZAR,USDTNGN,USDTZAR,XRPNGN,XRPZAR,SOLNGN,SOLZAR,BTCKES,USDTKES,USDCKES,USDCNGN,USDTGHS,BTCGHS,BTCUGX,USDTUGX,ETHKES';
+    var results = [];
+    var currentSort = 'spread';
+
+    function spreadColor(pct) {
+        if (pct >= 3) return '#22c55e';
+        if (pct >= 1.5) return '#eab308';
+        return '#94a3b8';
+    }
+
+    function formatPrice(pair, price) {
+        if (price > 1000000) return price.toLocaleString('en', {maximumFractionDigits: 0});
+        if (price > 100) return price.toLocaleString('en', {maximumFractionDigits: 2});
+        return price.toLocaleString('en', {maximumFractionDigits: 4});
+    }
+
+    function renderCards() {
+        var sorted = results.slice();
+        if (currentSort === 'spread') sorted.sort(function(a,b) { return b.spread - a.spread; });
+        else if (currentSort === 'pair') sorted.sort(function(a,b) { return a.pair.localeCompare(b.pair); });
+        else if (currentSort === 'sources') sorted.sort(function(a,b) { return b.sources.length - a.sources.length; });
+
+        var maxSpread = Math.max.apply(null, sorted.map(function(r) { return r.spread; }));
+        if (maxSpread < 1) maxSpread = 1;
+
+        var html = '';
+        sorted.forEach(function(r) {
+            var barWidth = Math.max((r.spread / maxSpread) * 100, 3);
+            var sColor = spreadColor(r.spread);
+
+            html += '<div class="opp-card">' +
+                '<div class="opp-top">' +
+                    '<span class="opp-pair">' + r.pair + '</span>' +
+                    '<span class="opp-spread" style="color:' + sColor + '">' + r.spread.toFixed(2) + '%</span>' +
+                '</div>' +
+                '<div class="opp-detail">' +
+                    '<div class="opp-side">' +
+                        '<div class="opp-side-label buy-label">Buy (cheapest)</div>' +
+                        '<div class="opp-exchange">' + r.cheapest.exchange + '</div>' +
+                        '<div class="opp-price">' + formatPrice(r.pair, r.cheapest.rate) + '</div>' +
+                    '</div>' +
+                    '<div class="opp-side">' +
+                        '<div class="opp-side-label sell-label">Sell (most expensive)</div>' +
+                        '<div class="opp-exchange">' + r.dearest.exchange + '</div>' +
+                        '<div class="opp-price">' + formatPrice(r.pair, r.dearest.rate) + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="opp-meta">' +
+                    '<span class="opp-sources">' + r.sources.length + ' exchanges: ' + r.sources.map(function(s){return s.exchange}).join(', ') + '</span>' +
+                '</div>' +
+                '<div class="bar-bg"><div class="bar-fill" style="width:' + barWidth + '%; background:' + sColor + '"></div></div>' +
+            '</div>';
+        });
+
+        document.getElementById('cards').innerHTML = html || '<div class="loading">No multi-source pairs found</div>';
+    }
+
+    function sortBy(field) {
+        currentSort = field;
+        document.querySelectorAll('.sort-btn').forEach(function(b) { b.classList.remove('active'); });
+        event.target.classList.add('active');
+        renderCards();
+    }
+
+    function fetchData() {
+        fetch('https://api.moxiemetrx.com/v1/rates/live?pairs=' + ALL_PAIRS + '&include_sources=true', {
+            headers: { 'X-API-Key': API_KEY }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            var data = d.data || {};
+            results = [];
+
+            Object.keys(data).forEach(function(pair) {
+                var info = data[pair];
+                var sources = info.sources || [];
+                if (sources.length < 2) return;
+
+                var sorted = sources.slice().sort(function(a,b) { return a.rate - b.rate; });
+                var cheapest = sorted[0];
+                var dearest = sorted[sorted.length - 1];
+                var spread = (dearest.rate - cheapest.rate) / cheapest.rate * 100;
+
+                results.push({
+                    pair: pair,
+                    spread: spread,
+                    cheapest: cheapest,
+                    dearest: dearest,
+                    sources: sources
+                });
+            });
+
+            renderCards();
+            document.getElementById('update-time').textContent = 'Live data \u2014 ' + new Date().toLocaleTimeString() + ' \u2014 refreshes every 60s';
+        })
+        .catch(function() {
+            document.getElementById('cards').innerHTML = '<div class="loading" style="color:#ef4444;">Failed to load. Retrying...</div>';
+        });
+    }
+
+    fetchData();
+    setInterval(fetchData, 60000);
+</script>
+
+</body>
+</html>

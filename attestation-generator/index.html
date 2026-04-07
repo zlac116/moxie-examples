@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Attestation Generator — moxiemetrx</title>
+    <meta name="description" content="Generate HMAC-SHA256 signed crypto-fiat rate certificates for any pair at any point in time. Audit-ready, tamper-proof.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f172a; --surface: #1e293b; --border: #334155;
+            --text: #f8fafc; --text-secondary: #94a3b8;
+            --accent: #38bdf8; --accent-hover: #7dd3fc;
+            --green: #22c55e; --red: #ef4444; --yellow: #eab308;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; }
+        a { color: #7dd3fc; text-underline-offset: 2px; }
+        .container { max-width: 700px; margin: 0 auto; padding: 40px 24px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .logo { font-size: 18px; font-weight: 700; color: var(--text); text-decoration: none; }
+        .logo span { color: var(--accent); }
+        .back-link { font-size: 14px; color: var(--text-secondary); text-decoration: none; }
+
+        h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+        .subtitle { font-size: 14px; color: #cbd5e1; margin-bottom: 32px; }
+
+        .form-row { display: flex; gap: 16px; margin-bottom: 20px; }
+        .form-group { flex: 1; }
+        label { display: block; font-size: 13px; font-weight: 500; color: #cbd5e1; margin-bottom: 6px; }
+        input, select {
+            width: 100%; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 14px;
+            outline: none; transition: border-color 0.15s;
+        }
+        input:focus, select:focus { border-color: var(--accent); }
+        select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+
+        .gen-btn {
+            width: 100%; padding: 14px; background: var(--accent); color: #0f172a;
+            font-family: var(--font); font-size: 15px; font-weight: 700; border: none;
+            border-radius: 8px; cursor: pointer; transition: all 0.15s;
+        }
+        .gen-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .gen-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .certificate { display: none; margin-top: 32px; }
+        .certificate.visible { display: block; }
+
+        .cert-header {
+            background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);
+            border-radius: 12px 12px 0 0; padding: 16px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .cert-id { font-size: 13px; font-weight: 600; color: var(--green); font-family: monospace; }
+        .cert-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 4px; text-transform: uppercase; }
+        .badge-verified { background: rgba(34,197,94,0.15); color: var(--green); }
+        .badge-caution { background: rgba(234,179,8,0.15); color: var(--yellow); }
+        .badge-unverified { background: rgba(239,68,68,0.15); color: var(--red); }
+
+        .cert-body {
+            background: var(--surface); border: 1px solid var(--border); border-top: none;
+            border-radius: 0 0 12px 12px; padding: 20px;
+        }
+
+        .cert-section { margin-bottom: 16px; }
+        .cert-section-title { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+        .cert-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; }
+        .cert-row .label { color: #cbd5e1; }
+        .cert-row .value { font-weight: 600; font-family: 'SF Mono', monospace; font-size: 12px; }
+
+        .cert-sig {
+            background: #0a0e14; border-radius: 8px; padding: 12px 16px; margin-top: 8px;
+            font-family: 'SF Mono', monospace; font-size: 11px; color: var(--green);
+            word-break: break-all; line-height: 1.6;
+        }
+
+        .cert-actions { display: flex; gap: 12px; margin-top: 16px; }
+        .cert-action-btn {
+            padding: 8px 16px; font-family: var(--font); font-size: 12px; font-weight: 600;
+            border-radius: 6px; cursor: pointer; border: 1px solid var(--border);
+            background: transparent; color: var(--text-secondary); transition: all 0.15s;
+        }
+        .cert-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .cert-action-btn.copied { border-color: var(--green); color: var(--green); }
+
+        .enterprise-note {
+            font-size: 12px; color: var(--text-secondary); margin-top: 24px; padding: 12px 16px;
+            background: rgba(56,189,248,0.06); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0;
+        }
+
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; }
+        .footer a { color: var(--text-secondary); margin: 0 10px; text-decoration: none; }
+        .footer a:hover { color: var(--text); }
+
+        @media (max-width: 640px) { .form-row { flex-direction: column; gap: 12px; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <a href="/" class="logo">moxie<span>metrx</span></a>
+        <a href="https://moxiemetrx.com/demos" class="back-link">&larr; Demos</a>
+    </div>
+
+    <h1>Rate Attestation Generator</h1>
+    <p class="subtitle">Generate HMAC-SHA256 signed rate certificates for any pair at any point in time. Tamper-proof, audit-ready.</p>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Currency Pair</label>
+            <select id="pair">
+                <option value="BTCNGN">BTC/NGN</option>
+                <option value="BTCZAR">BTC/ZAR</option>
+                <option value="ETHNGN">ETH/NGN</option>
+                <option value="ETHZAR">ETH/ZAR</option>
+                <option value="USDTNGN">USDT/NGN</option>
+                <option value="USDTZAR">USDT/ZAR</option>
+                <option value="BTCKES">BTC/KES</option>
+                <option value="USDTKES">USDT/KES</option>
+                <option value="XRPNGN">XRP/NGN</option>
+                <option value="XRPZAR">XRP/ZAR</option>
+                <option value="SOLZAR">SOL/ZAR</option>
+                <option value="SOLNGN">SOL/NGN</option>
+                <option value="BTCGHS">BTC/GHS</option>
+                <option value="BTCUGX">BTC/UGX</option>
+                <option value="ETHKES">ETH/KES</option>
+                <option value="USDTGHS">USDT/GHS</option>
+                <option value="USDTUGX">USDT/UGX</option>
+                <option value="USDCNGN">USDC/NGN</option>
+                <option value="USDCKES">USDC/KES</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="cert-date" value="">
+        </div>
+        <div class="form-group">
+            <label>Time (UTC)</label>
+            <select id="cert-time">
+                <option value="00:00">00:00</option>
+                <option value="01:00">01:00</option>
+                <option value="02:00">02:00</option>
+                <option value="03:00">03:00</option>
+                <option value="04:00">04:00</option>
+                <option value="05:00">05:00</option>
+                <option value="06:00">06:00</option>
+                <option value="07:00">07:00</option>
+                <option value="08:00">08:00</option>
+                <option value="09:00" selected>09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="13:00">13:00</option>
+                <option value="14:00">14:00</option>
+                <option value="15:00">15:00</option>
+                <option value="16:00">16:00</option>
+                <option value="17:00">17:00</option>
+                <option value="18:00">18:00</option>
+                <option value="19:00">19:00</option>
+                <option value="20:00">20:00</option>
+                <option value="21:00">21:00</option>
+                <option value="22:00">22:00</option>
+                <option value="23:00">23:00</option>
+            </select>
+        </div>
+    </div>
+
+    <button class="gen-btn" id="gen-btn" onclick="generate()">Generate Certificate</button>
+
+    <div class="certificate" id="certificate">
+        <div class="cert-header">
+            <span class="cert-id" id="cert-id"></span>
+            <span id="cert-badge-wrap"></span>
+        </div>
+        <div class="cert-body">
+            <div class="cert-section">
+                <div class="cert-section-title">Rate Data</div>
+                <div class="cert-row"><span class="label">Pair</span><span class="value" id="c-pair"></span></div>
+                <div class="cert-row"><span class="label">Timestamp</span><span class="value" id="c-timestamp"></span></div>
+                <div class="cert-row"><span class="label">Rate</span><span class="value" id="c-rate"></span></div>
+                <div class="cert-row"><span class="label">Calculation</span><span class="value" id="c-calc"></span></div>
+                <div class="cert-row"><span class="label">Sources</span><span class="value" id="c-sources"></span></div>
+            </div>
+
+            <div class="cert-section">
+                <div class="cert-section-title">Verification</div>
+                <div class="cert-row"><span class="label">Status</span><span class="value" id="c-status"></span></div>
+                <div class="cert-row"><span class="label">Confidence</span><span class="value" id="c-confidence"></span></div>
+                <div class="cert-row"><span class="label">Divergence from Synthetic</span><span class="value" id="c-divergence"></span></div>
+                <div class="cert-row"><span class="label">Synthetic Price</span><span class="value" id="c-synthetic"></span></div>
+                <div class="cert-row"><span class="label">Data Quality</span><span class="value" id="c-quality"></span></div>
+            </div>
+
+            <div class="cert-section">
+                <div class="cert-section-title">Cryptographic Signature</div>
+                <div class="cert-row"><span class="label">Algorithm</span><span class="value" id="c-algo"></span></div>
+                <div class="cert-sig" id="c-sig"></div>
+            </div>
+
+            <div class="cert-section">
+                <div class="cert-section-title">Signed Payload</div>
+                <div class="cert-sig" id="c-payload" style="color: var(--text-secondary); font-size: 10px;"></div>
+            </div>
+
+            <div class="cert-actions">
+                <button class="cert-action-btn" id="copy-json-btn">Copy as JSON</button>
+                <button class="cert-action-btn" id="copy-sig-btn">Copy Signature</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="enterprise-note">
+        <strong>Enterprise feature.</strong> Rate certificates with HMAC-SHA256 signatures are available on the Enterprise plan ($999/mo).
+        Certificates provide tamper-proof, cryptographically signed rate attestations for compliance, audit, and regulatory reporting.
+        <a href="https://moxiemetrx.com/signup">Get started</a>
+    </div>
+
+    <div class="footer">
+        <a href="https://moxiemetrx.com/signup">Get API Key</a>
+        <a href="https://docs.moxiemetrx.com/api-reference/certificates">API Docs</a>
+        <a href="https://moxiemetrx.com/demos">Demos</a>
+    </div>
+</div>
+
+<script>
+    var API_KEY = 'YOUR_API_KEY_HERE';
+    var fullCert = null;
+
+    // Set default date to today
+    document.getElementById('cert-date').value = new Date().toISOString().split('T')[0];
+
+    function statusBadge(status) {
+        var cls = status === 'verified' ? 'badge-verified' : status === 'caution' ? 'badge-caution' : 'badge-unverified';
+        return '<span class="cert-badge ' + cls + '">' + status + '</span>';
+    }
+
+    function generate() {
+        var btn = document.getElementById('gen-btn');
+        var pair = document.getElementById('pair').value;
+        var date = document.getElementById('cert-date').value;
+        var time = document.getElementById('cert-time').value;
+        var timestamp = date + 'T' + time + ':00';
+
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+
+        fetch('https://api.moxiemetrx.com/v1/certificates/' + pair + '/' + timestamp, {
+            headers: { 'X-API-Key': API_KEY }
+        })
+        .then(function(r) {
+            if (!r.ok) return r.json().then(function(e) { throw new Error(e.detail || 'Certificate not found'); });
+            return r.json();
+        })
+        .then(function(cert) {
+            fullCert = cert;
+            var data = cert.data || {};
+            var verif = cert.verification || {};
+            var audit = cert.audit || {};
+
+            document.getElementById('cert-id').textContent = cert.certificate_id || '';
+            document.getElementById('cert-badge-wrap').innerHTML = statusBadge(verif.status || 'unknown');
+
+            document.getElementById('c-pair').textContent = data.pair || pair;
+            document.getElementById('c-timestamp').textContent = data.timestamp || timestamp;
+            document.getElementById('c-rate').textContent = data.rate ? data.rate.toLocaleString('en', {maximumFractionDigits: 2}) : '—';
+            document.getElementById('c-calc').textContent = data.calculation || '—';
+            document.getElementById('c-sources').textContent = (data.sources || []).join(', ');
+
+            document.getElementById('c-status').textContent = verif.status || '—';
+            document.getElementById('c-confidence').textContent = verif.confidence ? (verif.confidence * 100).toFixed(0) + '%' : '—';
+            document.getElementById('c-divergence').textContent = verif.divergence_pct ? verif.divergence_pct.toFixed(2) + '%' : '—';
+            document.getElementById('c-synthetic').textContent = verif.synthetic_price ? verif.synthetic_price.toLocaleString('en', {maximumFractionDigits: 2}) : '—';
+            document.getElementById('c-quality').textContent = verif.data_quality || '—';
+
+            document.getElementById('c-algo').textContent = audit.algorithm || 'HMAC-SHA256';
+            document.getElementById('c-sig').textContent = audit.signature || '—';
+            document.getElementById('c-payload').textContent = audit.signed_payload || '—';
+
+            document.getElementById('certificate').classList.add('visible');
+            btn.disabled = false;
+            btn.textContent = 'Generate Another';
+        })
+        .catch(function(err) {
+            alert(err.message);
+            btn.disabled = false;
+            btn.textContent = 'Generate Certificate';
+        });
+    }
+
+    document.getElementById('copy-json-btn').addEventListener('click', function() {
+        var btn = this;
+        navigator.clipboard.writeText(JSON.stringify(fullCert, null, 2)).then(function() {
+            btn.textContent = 'Copied!'; btn.classList.add('copied');
+            setTimeout(function() { btn.textContent = 'Copy as JSON'; btn.classList.remove('copied'); }, 2000);
+        });
+    });
+
+    document.getElementById('copy-sig-btn').addEventListener('click', function() {
+        var btn = this;
+        var sig = (fullCert && fullCert.audit) ? fullCert.audit.signature : '';
+        navigator.clipboard.writeText(sig).then(function() {
+            btn.textContent = 'Copied!'; btn.classList.add('copied');
+            setTimeout(function() { btn.textContent = 'Copy Signature'; btn.classList.remove('copied'); }, 2000);
+        });
+    });
+</script>
+
+</body>
+</html>
