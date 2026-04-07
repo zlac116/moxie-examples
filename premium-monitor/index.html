@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stablecoin Premium Monitor — moxiemetrx</title>
+    <meta name="description" content="Live USDT premium vs official USD exchange rate across Nigeria, South Africa, Kenya, Ghana, and Uganda. Updated every 60 seconds from 7 exchanges.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0f172a; --surface: #1e293b; --border: #334155;
+            --text: #f8fafc; --text-secondary: #94a3b8;
+            --accent: #38bdf8; --green: #22c55e; --yellow: #eab308; --red: #ef4444;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; }
+        a { color: #7dd3fc; text-underline-offset: 2px; }
+        .container { max-width: 720px; margin: 0 auto; padding: 40px 24px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .logo { font-size: 18px; font-weight: 700; color: var(--text); text-decoration: none; }
+        .logo span { color: var(--accent); }
+        .back-link { font-size: 14px; color: var(--text-secondary); text-decoration: none; }
+
+        h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+        .subtitle { font-size: 14px; color: #cbd5e1; margin-bottom: 8px; }
+        .last-updated { font-size: 12px; color: var(--text-secondary); margin-bottom: 32px; }
+        .live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+        .premium-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            padding: 20px; margin-bottom: 12px; transition: border-color 0.15s;
+        }
+        .premium-card:hover { border-color: var(--accent); }
+
+        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .country-info { display: flex; align-items: center; gap: 12px; }
+        .flag { font-size: 24px; }
+        .country-name { font-size: 15px; font-weight: 600; }
+        .country-ccy { font-size: 12px; color: var(--text-secondary); }
+        .premium-value { font-size: 22px; font-weight: 800; }
+
+        .rates-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; }
+        .rates-row .label { }
+        .rates-row .value { font-family: 'SF Mono', monospace; color: #cbd5e1; }
+
+        .bar-bg { height: 8px; background: #0f172a; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+
+        .explainer {
+            background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.12);
+            border-radius: 10px; padding: 16px 20px; margin: 24px 0; font-size: 13px; color: #cbd5e1; line-height: 1.7;
+        }
+        .explainer strong { color: var(--text); }
+
+        .cta { text-align: center; margin: 32px 0 16px; }
+        .cta-btn {
+            display: inline-block; padding: 10px 24px; background: var(--accent); color: #0f172a;
+            font-weight: 700; font-size: 13px; border-radius: 8px; text-decoration: none; transition: all 0.15s;
+        }
+        .cta-btn:hover { background: #7dd3fc; transform: translateY(-1px); }
+
+        .footer { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; }
+        .footer a { color: var(--text-secondary); margin: 0 10px; text-decoration: none; }
+        .footer a:hover { color: var(--text); }
+
+        .loading { text-align: center; padding: 48px; color: var(--text-secondary); }
+
+        @media (max-width: 640px) {
+            .premium-value { font-size: 18px; }
+            .flag { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <a href="/" class="logo">moxie<span>metrx</span></a>
+        <a href="https://moxiemetrx.com/demos" class="back-link">&larr; Demos</a>
+    </div>
+
+    <h1>Stablecoin Premium Monitor</h1>
+    <p class="subtitle">How much more does USDT cost on African exchanges vs the official USD rate?</p>
+    <div class="last-updated"><span class="live-dot"></span><span id="update-time">Loading...</span></div>
+
+    <div id="cards">
+        <div class="loading">Fetching live premiums from 7 exchanges...</div>
+    </div>
+
+    <div class="explainer">
+        <strong>What is the stablecoin premium?</strong> When you buy USDT on an African exchange, you pay more than the official USD/local currency rate. This gap measures the real cost of accessing dollars through crypto. A higher premium means tighter FX controls or lower exchange liquidity.
+        <br><br>
+        <a href="https://docs.moxiemetrx.com/blog/stablecoin-premium-africa">Read the full analysis (90 days, 7 exchanges) &rarr;</a>
+    </div>
+
+    <div class="cta">
+        <a href="https://moxiemetrx.com/signup" class="cta-btn">Get Free API Key — Track Premiums Programmatically</a>
+    </div>
+
+    <div class="footer">
+        <a href="/">Home</a>
+        <a href="https://docs.moxiemetrx.com">Docs</a>
+        <a href="https://docs.moxiemetrx.com/blog">Research</a>
+        <a href="https://moxiemetrx.com/demos">Demos</a>
+        <a href="/status">Status</a>
+    </div>
+</div>
+
+<script>
+    var API_KEY = 'YOUR_API_KEY_HERE';
+
+    var COUNTRIES = [
+        { ccy: 'GHS', name: 'Ghana', flag: '\ud83c\uddec\ud83c\udded', pair: 'USDTGHS', color: '#FF6B6B' },
+        { ccy: 'NGN', name: 'Nigeria', flag: '\ud83c\uddf3\ud83c\uddec', pair: 'USDTNGN', color: '#F5A623' },
+        { ccy: 'KES', name: 'Kenya', flag: '\ud83c\uddf0\ud83c\uddea', pair: 'USDTKES', color: '#00BFA5' },
+        { ccy: 'UGX', name: 'Uganda', flag: '\ud83c\uddfa\ud83c\uddec', pair: 'USDTUGX', color: '#AB7DF6' },
+        { ccy: 'ZAR', name: 'South Africa', flag: '\ud83c\uddff\ud83c\udde6', pair: 'USDTZAR', color: '#4C8BF5' }
+    ];
+
+    function premiumColor(pct) {
+        if (pct >= 5) return '#ef4444';
+        if (pct >= 2) return '#eab308';
+        if (pct >= 1) return '#f97316';
+        return '#22c55e';
+    }
+
+    function fetchPremiums() {
+        var pairs = COUNTRIES.map(function(c) { return c.pair; }).join(',');
+
+        fetch('https://api.moxiemetrx.com/v1/rates/live?pairs=' + pairs + '&include_synthetic=true&include_sources=true', {
+            headers: { 'X-API-Key': API_KEY }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            var data = d.data || {};
+            var results = [];
+
+            COUNTRIES.forEach(function(c) {
+                var info = data[c.pair];
+                if (!info) return;
+
+                var exchangeRate = info.rate;
+                var synthetic = info.pricing && info.pricing.synthetic ? info.pricing.synthetic.price : null;
+                var officialRate = synthetic || exchangeRate * 0.98;
+                var premium = ((exchangeRate - officialRate) / officialRate) * 100;
+                if (premium < 0) premium = 0;
+
+                results.push({
+                    country: c,
+                    exchangeRate: exchangeRate,
+                    officialRate: officialRate,
+                    premium: premium,
+                    sources: info.sources ? info.sources.length : 0
+                });
+            });
+
+            results.sort(function(a, b) { return b.premium - a.premium; });
+
+            var maxPremium = Math.max.apply(null, results.map(function(r) { return r.premium; }));
+            if (maxPremium < 1) maxPremium = 1;
+
+            var html = '';
+            results.forEach(function(r) {
+                var barWidth = Math.max((r.premium / maxPremium) * 100, 2);
+                var pColor = premiumColor(r.premium);
+
+                html += '<div class="premium-card">' +
+                    '<div class="card-top">' +
+                        '<div class="country-info">' +
+                            '<span class="flag">' + r.country.flag + '</span>' +
+                            '<div><div class="country-name">' + r.country.name + '</div>' +
+                            '<div class="country-ccy">' + r.country.ccy + ' &middot; ' + r.sources + ' exchange' + (r.sources !== 1 ? 's' : '') + '</div></div>' +
+                        '</div>' +
+                        '<div class="premium-value" style="color:' + pColor + '">' + r.premium.toFixed(1) + '%</div>' +
+                    '</div>' +
+                    '<div class="rates-row">' +
+                        '<span class="label">Official USD/' + r.country.ccy + '</span>' +
+                        '<span class="value">' + r.officialRate.toFixed(2) + '</span>' +
+                    '</div>' +
+                    '<div class="rates-row">' +
+                        '<span class="label">USDT/' + r.country.ccy + ' (exchange)</span>' +
+                        '<span class="value">' + r.exchangeRate.toFixed(2) + '</span>' +
+                    '</div>' +
+                    '<div class="bar-bg"><div class="bar-fill" style="width:' + barWidth + '%; background:' + pColor + '"></div></div>' +
+                '</div>';
+            });
+
+            document.getElementById('cards').innerHTML = html;
+            document.getElementById('update-time').textContent = 'Live data \u2014 ' + new Date().toLocaleTimeString() + ' \u2014 refreshes every 60s';
+        })
+        .catch(function() {
+            document.getElementById('cards').innerHTML = '<div class="loading" style="color:#ef4444;">Failed to load. Retrying...</div>';
+        });
+    }
+
+    fetchPremiums();
+    setInterval(fetchPremiums, 60000);
+</script>
+
+</body>
+</html>
