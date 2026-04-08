@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <title>Rate Attestation Generator — moxiemetrx</title>
     <meta name="description" content="Generate HMAC-SHA256 signed crypto-fiat rate certificates for any pair at any point in time. Audit-ready, tamper-proof.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -86,6 +87,17 @@
         .cert-action-btn:hover { border-color: var(--accent); color: var(--accent); }
         .cert-action-btn.copied { border-color: var(--green); color: var(--green); }
 
+        .tab-bar { display: flex; gap: 0; margin-bottom: 24px; }
+        .tab-btn {
+            padding: 10px 24px; font-family: var(--font); font-size: 13px; font-weight: 600;
+            border: 1px solid var(--border); background: transparent; color: var(--text-secondary);
+            cursor: pointer; transition: all 0.15s;
+        }
+        .tab-btn:first-child { border-radius: 8px 0 0 8px; }
+        .tab-btn:last-child { border-radius: 0 8px 8px 0; border-left: none; }
+        .tab-btn.active { background: rgba(56,189,248,0.1); border-color: var(--accent); color: var(--accent); }
+        .tab-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+
         .enterprise-note {
             font-size: 12px; color: var(--text-secondary); margin-top: 24px; padding: 12px 16px;
             background: rgba(56,189,248,0.06); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0;
@@ -102,13 +114,19 @@
 
 <div class="container">
     <div class="header">
-        <a href="/" class="logo">moxie<span>metrx</span></a>
-        <a href="https://moxiemetrx.com/demos" class="back-link">&larr; Demos</a>
+        <a href="/" class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="28" height="28" style="vertical-align: middle; margin-right: 8px;"><defs><linearGradient id="icon-pulse" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.5"/><stop offset="40%" stop-color="#38bdf8" stop-opacity="1"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.5"/></linearGradient><linearGradient id="bg-fill" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1e3a5f"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs><rect x="0" y="0" width="40" height="40" rx="9" ry="9" fill="url(#bg-fill)"/><rect x="0.6" y="0.6" width="38.8" height="38.8" rx="8.4" ry="8.4" fill="none" stroke="#38bdf8" stroke-width="1.2" opacity="0.35"/><polyline points="6,30 10,30 14,10 19,25 24,7 29,27 33,17 36,17" fill="none" stroke="url(#icon-pulse)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="10" r="2" fill="#38bdf8"/><circle cx="24" cy="7" r="2" fill="#38bdf8"/><line x1="6" y1="34" x2="36" y2="34" stroke="#38bdf8" stroke-width="0.7" opacity="0.25"/></svg>moxie<span>metrx</span></a>
+        <a href="/demos" class="back-link">&larr; Demos</a>
     </div>
 
     <h1>Rate Attestation Generator</h1>
     <p class="subtitle">Generate HMAC-SHA256 signed rate certificates for any pair at any point in time. Tamper-proof, audit-ready.</p>
 
+    <div class="tab-bar">
+        <button class="tab-btn active" id="tab-generate" onclick="switchTab('generate')">Generate</button>
+        <button class="tab-btn" id="tab-verify" onclick="switchTab('verify')">Verify</button>
+    </div>
+
+    <div id="generate-panel">
     <div class="form-row">
         <div class="form-group">
             <label>Currency Pair</label>
@@ -216,18 +234,29 @@
     <div class="enterprise-note">
         <strong>Enterprise feature.</strong> Rate certificates with HMAC-SHA256 signatures are available on the Enterprise plan ($999/mo).
         Certificates provide tamper-proof, cryptographically signed rate attestations for compliance, audit, and regulatory reporting.
-        <a href="https://moxiemetrx.com/signup">Get started</a>
+        <a href="/signup">Get started</a>
     </div>
+    </div><!-- /generate-panel -->
+
+    <div id="verify-panel" style="display: none;">
+        <label>Paste certificate JSON</label>
+        <textarea id="verify-input" rows="10" placeholder='{"certificate_id": "...", "data": {...}, "audit": {...}}'
+            style="width: 100%; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-family: 'SF Mono', monospace; font-size: 12px;
+            outline: none; resize: vertical; transition: border-color 0.15s;"></textarea>
+        <button class="gen-btn" id="verify-btn" onclick="verifyCert()" style="margin-top: 16px;">Verify Certificate</button>
+        <div id="verify-result" style="display: none; margin-top: 24px;"></div>
+    </div><!-- /verify-panel -->
 
     <div class="footer">
-        <a href="https://moxiemetrx.com/signup">Get API Key</a>
+        <a href="/signup">Get API Key</a>
         <a href="https://docs.moxiemetrx.com/api-reference/certificates">API Docs</a>
-        <a href="https://moxiemetrx.com/demos">Demos</a>
+        <a href="/demos">Demos</a>
     </div>
 </div>
 
 <script>
-    var API_KEY = 'YOUR_API_KEY_HERE';
+    var API_KEY = '%%ENTERPRISE_API_KEY%%';
     var fullCert = null;
 
     // Set default date to today
@@ -248,7 +277,7 @@
         btn.disabled = true;
         btn.textContent = 'Generating...';
 
-        fetch('https://api.moxiemetrx.com/v1/certificates/' + pair + '/' + timestamp, {
+        fetch('/v1/certificates/' + pair + '/' + timestamp, {
             headers: { 'X-API-Key': API_KEY }
         })
         .then(function(r) {
@@ -307,6 +336,92 @@
             setTimeout(function() { btn.textContent = 'Copy Signature'; btn.classList.remove('copied'); }, 2000);
         });
     });
+
+    function switchTab(tab) {
+        document.getElementById('generate-panel').style.display = tab === 'generate' ? 'block' : 'none';
+        document.getElementById('verify-panel').style.display = tab === 'verify' ? 'block' : 'none';
+        document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    function verifyCert() {
+        var btn = document.getElementById('verify-btn');
+        var input = document.getElementById('verify-input').value.trim();
+        var resultDiv = document.getElementById('verify-result');
+
+        var pasted;
+        try { pasted = JSON.parse(input); } catch(e) {
+            showVerifyResult(false, 'Invalid JSON: ' + e.message);
+            return;
+        }
+
+        var pair = pasted.data && pasted.data.pair;
+        var timestamp = pasted.data && pasted.data.timestamp;
+        var pastedSig = pasted.audit && pasted.audit.signature;
+
+        if (!pair || !timestamp || !pastedSig) {
+            showVerifyResult(false, 'Missing required fields: data.pair, data.timestamp, or audit.signature');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Verifying...';
+
+        fetch('/v1/certificates/' + pair + '/' + timestamp, {
+            headers: { 'X-API-Key': API_KEY }
+        })
+        .then(function(r) {
+            if (!r.ok) throw new Error('Certificate not found on server');
+            return r.json();
+        })
+        .then(function(canonical) {
+            var expectedSig = canonical.audit && canonical.audit.signature;
+            var isValid = pastedSig === expectedSig;
+
+            if (isValid) {
+                showVerifyResult(true, null, {
+                    pair: pair,
+                    timestamp: timestamp,
+                    rate: canonical.data.rate,
+                    certificate_id: canonical.certificate_id
+                });
+            } else {
+                showVerifyResult(false, 'Signature mismatch. The certificate may have been tampered with.');
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Verify Certificate';
+        })
+        .catch(function(err) {
+            showVerifyResult(false, err.message);
+            btn.disabled = false;
+            btn.textContent = 'Verify Certificate';
+        });
+    }
+
+    function showVerifyResult(valid, reason, details) {
+        var div = document.getElementById('verify-result');
+        div.style.display = 'block';
+
+        if (valid) {
+            div.innerHTML = '<div style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); border-radius: 10px; padding: 16px 20px;">' +
+                '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">' +
+                '<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="rgba(34,197,94,0.2)"/><path d="M6 10l3 3 5-6" stroke="#22c55e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+                '<span style="font-size: 16px; font-weight: 700; color: #22c55e;">Certificate Valid</span></div>' +
+                '<div class="cert-row"><span class="label">Certificate ID</span><span class="value">' + (details.certificate_id || '') + '</span></div>' +
+                '<div class="cert-row"><span class="label">Pair</span><span class="value">' + details.pair + '</span></div>' +
+                '<div class="cert-row"><span class="label">Timestamp</span><span class="value">' + details.timestamp + '</span></div>' +
+                '<div class="cert-row"><span class="label">Rate</span><span class="value">' + (details.rate ? details.rate.toLocaleString('en', {maximumFractionDigits: 2}) : '--') + '</span></div>' +
+                '</div>';
+        } else {
+            div.innerHTML = '<div style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 10px; padding: 16px 20px;">' +
+                '<div style="display: flex; align-items: center; gap: 8px;">' +
+                '<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="rgba(239,68,68,0.2)"/><path d="M7 7l6 6M13 7l-6 6" stroke="#ef4444" stroke-width="2" fill="none" stroke-linecap="round"/></svg>' +
+                '<span style="font-size: 16px; font-weight: 700; color: #ef4444;">Verification Failed</span></div>' +
+                '<div style="font-size: 13px; color: #cbd5e1; margin-top: 8px;">' + reason + '</div>' +
+                '</div>';
+        }
+    }
 </script>
 
 </body>

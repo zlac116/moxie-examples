@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <title>Stablecoin Premium Monitor — moxiemetrx</title>
     <meta name="description" content="Live USDT premium vs official USD exchange rate across Nigeria, South Africa, Kenya, Ghana, and Uganda. Updated every 60 seconds from 7 exchanges.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -46,6 +47,9 @@
         .rates-row .label { }
         .rates-row .value { font-family: 'SF Mono', monospace; color: #cbd5e1; }
 
+        .sparkline-wrap { height: 40px; margin: 10px 0; position: relative; }
+        .sparkline-label { font-size: 10px; color: var(--text-secondary); text-align: right; margin-top: 2px; }
+
         .bar-bg { height: 8px; background: #0f172a; border-radius: 4px; overflow: hidden; }
         .bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
 
@@ -78,8 +82,8 @@
 
 <div class="container">
     <div class="header">
-        <a href="/" class="logo">moxie<span>metrx</span></a>
-        <a href="https://moxiemetrx.com/demos" class="back-link">&larr; Demos</a>
+        <a href="/" class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="28" height="28" style="vertical-align: middle; margin-right: 8px;"><defs><linearGradient id="icon-pulse" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.5"/><stop offset="40%" stop-color="#38bdf8" stop-opacity="1"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.5"/></linearGradient><linearGradient id="bg-fill" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1e3a5f"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs><rect x="0" y="0" width="40" height="40" rx="9" ry="9" fill="url(#bg-fill)"/><rect x="0.6" y="0.6" width="38.8" height="38.8" rx="8.4" ry="8.4" fill="none" stroke="#38bdf8" stroke-width="1.2" opacity="0.35"/><polyline points="6,30 10,30 14,10 19,25 24,7 29,27 33,17 36,17" fill="none" stroke="url(#icon-pulse)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="10" r="2" fill="#38bdf8"/><circle cx="24" cy="7" r="2" fill="#38bdf8"/><line x1="6" y1="34" x2="36" y2="34" stroke="#38bdf8" stroke-width="0.7" opacity="0.25"/></svg>moxie<span>metrx</span></a>
+        <a href="/demos" class="back-link">&larr; Demos</a>
     </div>
 
     <h1>Stablecoin Premium Monitor</h1>
@@ -97,20 +101,35 @@
     </div>
 
     <div class="cta">
-        <a href="https://moxiemetrx.com/signup" class="cta-btn">Get Free API Key — Track Premiums Programmatically</a>
+        <a href="/signup" class="cta-btn">Get Free API Key — Track Premiums Programmatically</a>
     </div>
 
     <div class="footer">
         <a href="/">Home</a>
         <a href="https://docs.moxiemetrx.com">Docs</a>
         <a href="https://docs.moxiemetrx.com/blog">Research</a>
-        <a href="https://moxiemetrx.com/demos">Demos</a>
+        <a href="/demos">Demos</a>
         <a href="/status">Status</a>
     </div>
 </div>
 
+<div id="alert-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.85); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:32px; max-width:420px; width:90%; position:relative;">
+        <button onclick="closeAlertModal()" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-secondary); font-size:18px; cursor:pointer;">&times;</button>
+        <div style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:16px;">Set Rate Alert</div>
+        <div id="alert-condition" style="background:#0a0e14; border-radius:8px; padding:10px 14px; font-family:'SF Mono',monospace; font-size:13px; color:var(--accent); margin-bottom:16px;"></div>
+        <label style="display:block; font-size:12px; color:#cbd5e1; margin-bottom:6px;">Trigger when above (%)</label>
+        <input type="number" id="alert-threshold" step="0.1" style="width:100%; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; margin-bottom:16px; outline:none;">
+        <label style="display:block; font-size:12px; color:#cbd5e1; margin-bottom:6px;">Email</label>
+        <input type="email" id="alert-email" placeholder="you@company.com" style="width:100%; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; margin-bottom:16px; outline:none;">
+        <button id="alert-submit-btn" onclick="submitAlert()" style="width:100%; padding:12px; background:var(--accent); color:#0f172a; font-family:var(--font); font-size:14px; font-weight:700; border:none; border-radius:8px; cursor:pointer;">Create Alert</button>
+        <div style="font-size:10px; color:var(--text-secondary); margin-top:12px; text-align:center;">We'll email you once when this threshold is crossed. No spam, unsubscribe anytime.</div>
+    </div>
+</div>
+
 <script>
-    var API_KEY = 'YOUR_API_KEY_HERE';
+    var API_KEY = '%%BUILDER_API_KEY%%';
+    var sparklineCache = {};
 
     var COUNTRIES = [
         { ccy: 'GHS', name: 'Ghana', flag: '\ud83c\uddec\ud83c\udded', pair: 'USDTGHS', color: '#FF6B6B' },
@@ -130,7 +149,7 @@
     function fetchPremiums() {
         var pairs = COUNTRIES.map(function(c) { return c.pair; }).join(',');
 
-        fetch('https://api.moxiemetrx.com/v1/rates/live?pairs=' + pairs + '&include_synthetic=true&include_sources=true', {
+        fetch('/v1/rates/live?pairs=' + pairs + '&include_synthetic=true&include_sources=true', {
             headers: { 'X-API-Key': API_KEY }
         })
         .then(function(r) { return r.json(); })
@@ -184,8 +203,18 @@
                         '<span class="label">USDT/' + r.country.ccy + ' (exchange)</span>' +
                         '<span class="value">' + r.exchangeRate.toFixed(2) + '</span>' +
                     '</div>' +
-                    '<div class="bar-bg"><div class="bar-fill" style="width:' + barWidth + '%; background:' + pColor + '"></div></div>' +
-                '</div>';
+                    (sparklineCache[r.country.pair] || '') +
+                    '<div class="bar-bg"><div class="bar-fill" style="width:' + barWidth + '%; background:' + pColor + '"></div></div>';
+
+                if (r.premium >= 3) {
+                    html += '<div style="margin-top:8px; padding:8px 12px; background:rgba(56,189,248,0.04); border-radius:6px; display:flex; align-items:center; gap:8px; font-size:11px; color:var(--text-secondary);">' +
+                        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>' +
+                        'Alert me when ' + r.country.name + ' premium crosses ' + Math.ceil(r.premium) + '%' +
+                        ' <a href="javascript:void(0)" onclick="openAlertModal(\'' + r.country.pair + '\',\'premium\',' + Math.ceil(r.premium) + ')" style="color:var(--accent); font-weight:600; text-decoration:underline; margin-left:auto;">Set alert</a>' +
+                    '</div>';
+                }
+
+                html += '</div>';
             });
 
             document.getElementById('cards').innerHTML = html;
@@ -196,7 +225,142 @@
         });
     }
 
+    function buildSparklineSVG(dataPoints, color) {
+        if (!dataPoints || dataPoints.length < 2) return '';
+        var values = dataPoints.map(function(d) { return d.avg_premium_pct; }).filter(function(v) { return v != null && isFinite(v); });
+        if (values.length < 2) return '';
+
+        var vbW = 200;
+        var vbH = 40;
+        var padY = 2;
+        var usableH = vbH - 2 * padY;
+
+        var minV = Math.min.apply(null, values);
+        var maxV = Math.max.apply(null, values);
+        var range = maxV - minV;
+        if (range === 0) range = 1;
+
+        var points = values.map(function(v, i) {
+            var x = (i / (values.length - 1)) * vbW;
+            var y = padY + usableH - ((v - minV) / range) * usableH;
+            return x.toFixed(1) + ',' + y.toFixed(1);
+        });
+
+        var gradId = 'sg-' + Math.random().toString(36).substr(2, 6);
+        var firstPt = '0,' + vbH;
+        var lastPt = vbW + ',' + vbH;
+        var fillPoints = firstPt + ' ' + points.join(' ') + ' ' + lastPt;
+
+        return '<div class="sparkline-wrap">' +
+            '<svg width="100%" height="40" viewBox="0 0 ' + vbW + ' ' + vbH + '" preserveAspectRatio="none">' +
+                '<defs><linearGradient id="' + gradId + '" x1="0" y1="0" x2="0" y2="1">' +
+                    '<stop offset="0%" stop-color="' + color + '" stop-opacity="0.1"/>' +
+                    '<stop offset="100%" stop-color="' + color + '" stop-opacity="0"/>' +
+                '</linearGradient></defs>' +
+                '<polygon points="' + fillPoints + '" fill="url(#' + gradId + ')"/>' +
+                '<polyline points="' + points.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+            '</svg>' +
+            '<div class="sparkline-label">7-day trend</div>' +
+        '</div>';
+    }
+
+    function fetchSparklines() {
+        var now = new Date();
+        var start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        var startISO = start.toISOString();
+        var endISO = now.toISOString();
+
+        var requests = COUNTRIES.map(function(c) {
+            var url = '/v1/premium?pair=' + c.pair +
+                '&start=' + encodeURIComponent(startISO) +
+                '&end=' + encodeURIComponent(endISO) +
+                '&interval=1h&limit=168';
+
+            return fetch(url, { headers: { 'X-API-Key': API_KEY } })
+                .then(function(r) {
+                    if (!r.ok) return null;
+                    return r.json();
+                })
+                .then(function(json) {
+                    if (!json) return;
+                    var dataPoints = Array.isArray(json) ? json : (json.data || null);
+                    if (!Array.isArray(dataPoints) || dataPoints.length < 2) return;
+                    sparklineCache[c.pair] = buildSparklineSVG(dataPoints, premiumColor(
+                        dataPoints[dataPoints.length - 1].avg_premium_pct || 0
+                    ));
+                })
+                .catch(function() { /* silently ignore */ });
+        });
+
+        Promise.all(requests).then(function() {
+            var hasAny = false;
+            for (var k in sparklineCache) { hasAny = true; break; }
+            if (hasAny) fetchPremiums();
+        });
+    }
+
+    var alertPair = '', alertMetric = '';
+
+    function openAlertModal(pair, metric, threshold) {
+        alertPair = pair;
+        alertMetric = metric;
+        document.getElementById('alert-condition').textContent = pair + ' ' + metric + ' > ' + threshold.toFixed(1) + '%';
+        document.getElementById('alert-threshold').value = threshold.toFixed(1);
+        document.getElementById('alert-email').value = '';
+        document.getElementById('alert-submit-btn').textContent = 'Create Alert';
+        document.getElementById('alert-submit-btn').disabled = false;
+        var resultEl = document.getElementById('alert-result');
+        if (resultEl) resultEl.style.display = 'none';
+        document.getElementById('alert-modal').style.display = 'flex';
+    }
+
+    function closeAlertModal() {
+        document.getElementById('alert-modal').style.display = 'none';
+    }
+
+    function submitAlert() {
+        var email = document.getElementById('alert-email').value.trim();
+        if (!email || email.indexOf('@') === -1) {
+            document.getElementById('alert-email').style.borderColor = '#ef4444';
+            return;
+        }
+        var btn = document.getElementById('alert-submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        var threshold = parseFloat(document.getElementById('alert-threshold').value);
+
+        fetch('/v1/alerts/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, pair: alertPair, metric: alertMetric, threshold: threshold, direction: 'above' })
+        })
+        .then(function() { showAlertSuccess(email); })
+        .catch(function() { showAlertSuccess(email); });
+    }
+
+    function showAlertSuccess(email) {
+        var modal = document.getElementById('alert-modal').querySelector('div');
+        var btn = document.getElementById('alert-submit-btn');
+        btn.style.display = 'none';
+
+        var successDiv = document.createElement('div');
+        successDiv.id = 'alert-result';
+        successDiv.style.cssText = 'text-align:center; padding:16px 0;';
+        successDiv.innerHTML = '<svg width="32" height="32" viewBox="0 0 32 32" style="margin-bottom:8px;"><circle cx="16" cy="16" r="16" fill="rgba(34,197,94,0.15)"/><path d="M10 16l4 4 8-9" stroke="#22c55e" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+            '<div style="font-size:16px; font-weight:700; color:#22c55e; margin-bottom:4px;">Alert created!</div>' +
+            '<div style="font-size:13px; color:#cbd5e1;">We\'ll email ' + email + ' when the threshold is crossed.</div>';
+        btn.parentNode.insertBefore(successDiv, btn.nextSibling);
+
+        setTimeout(closeAlertModal, 3000);
+    }
+
+    document.getElementById('alert-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeAlertModal();
+    });
+
     fetchPremiums();
+    fetchSparklines();
     setInterval(fetchPremiums, 60000);
 </script>
 

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <title>Remittance Cost Calculator — moxiemetrx</title>
     <meta name="description" content="Compare the real cost of sending money to Africa via crypto vs traditional channels. Powered by live exchange rates from 7 African exchanges.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -69,6 +70,16 @@
         .savings-label { font-size: 13px; color: #cbd5e1; margin-top: 4px; }
         .savings-pct { font-size: 14px; color: var(--green); font-weight: 600; margin-top: 4px; }
 
+        .share-row { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
+        .share-btn {
+            padding: 8px 16px; font-family: var(--font); font-size: 12px; font-weight: 600;
+            border: 1px solid var(--border); border-radius: 6px; background: transparent;
+            color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .share-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .share-btn.copied { border-color: var(--green); color: var(--green); }
+
         .disclaimer { font-size: 11px; color: var(--text-secondary); margin-top: 24px; line-height: 1.5; }
         .powered { font-size: 12px; color: var(--text-secondary); margin-top: 16px; text-align: center; }
 
@@ -83,8 +94,8 @@
 
 <div class="container">
     <div class="header">
-        <a href="/" class="logo">moxie<span>metrx</span></a>
-        <a href="https://moxiemetrx.com/demos" class="back-link">&larr; Demos</a>
+        <a href="/" class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="28" height="28" style="vertical-align: middle; margin-right: 8px;"><defs><linearGradient id="icon-pulse" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.5"/><stop offset="40%" stop-color="#38bdf8" stop-opacity="1"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.5"/></linearGradient><linearGradient id="bg-fill" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1e3a5f"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs><rect x="0" y="0" width="40" height="40" rx="9" ry="9" fill="url(#bg-fill)"/><rect x="0.6" y="0.6" width="38.8" height="38.8" rx="8.4" ry="8.4" fill="none" stroke="#38bdf8" stroke-width="1.2" opacity="0.35"/><polyline points="6,30 10,30 14,10 19,25 24,7 29,27 33,17 36,17" fill="none" stroke="url(#icon-pulse)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="10" r="2" fill="#38bdf8"/><circle cx="24" cy="7" r="2" fill="#38bdf8"/><line x1="6" y1="34" x2="36" y2="34" stroke="#38bdf8" stroke-width="0.7" opacity="0.25"/></svg>moxie<span>metrx</span></a>
+        <a href="/demos" class="back-link">&larr; Demos</a>
     </div>
 
     <h1>Remittance Cost Calculator</h1>
@@ -126,7 +137,7 @@
             <div class="result-row"><span class="label">Recipient gets</span><span class="value" id="crypto-received">—</span></div>
             <div class="result-row"><span class="label">Official FX rate</span><span class="value" id="official-rate">—</span></div>
             <div class="result-row"><span class="label">USDT exchange rate</span><span class="value" id="usdt-rate">—</span></div>
-            <div class="source-info" id="crypto-source">Source: MoxieMetrx VWAP from 7 exchanges, live</div>
+            <div class="source-info" id="crypto-source">Source: moxiemetrx VWAP from 7 exchanges, live</div>
         </div>
 
         <!-- Savings -->
@@ -134,6 +145,12 @@
             <div class="savings-amount" id="savings-amount">—</div>
             <div class="savings-label">saved per transfer</div>
             <div class="savings-pct" id="savings-pct">—</div>
+            <div id="savings-alert-slot"></div>
+        </div>
+
+        <div class="share-row" id="share-row" style="display: none;">
+            <button class="share-btn" id="copy-link-btn" onclick="copyShareLink()">Copy link</button>
+            <button class="share-btn" id="share-x-btn" onclick="shareOnX()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>Share on X</button>
         </div>
 
         <div class="disclaimer">
@@ -143,18 +160,32 @@
     </div>
 
     <div class="powered">
-        Powered by <a href="/">MoxieMetrx API</a> — live rates from 7 African exchanges
+        Powered by <a href="/">moxiemetrx API</a> — live rates from 7 African exchanges
     </div>
 
     <div class="footer">
-        <a href="https://moxiemetrx.com/signup">Get Free API Key</a>
+        <a href="/signup">Get Free API Key</a>
         <a href="https://docs.moxiemetrx.com">Docs</a>
-        <a href="https://moxiemetrx.com/demos">Demos</a>
+        <a href="/demos">Demos</a>
+    </div>
+</div>
+
+<div id="alert-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.85); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:32px; max-width:420px; width:90%; position:relative;">
+        <button onclick="closeAlertModal()" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-secondary); font-size:18px; cursor:pointer;">&times;</button>
+        <div style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:16px;">Set Rate Alert</div>
+        <div id="alert-condition" style="background:#0a0e14; border-radius:8px; padding:10px 14px; font-family:'SF Mono',monospace; font-size:13px; color:var(--accent); margin-bottom:16px;"></div>
+        <label style="display:block; font-size:12px; color:#cbd5e1; margin-bottom:6px;">Trigger when above (%)</label>
+        <input type="number" id="alert-threshold" step="0.1" style="width:100%; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; margin-bottom:16px; outline:none;">
+        <label style="display:block; font-size:12px; color:#cbd5e1; margin-bottom:6px;">Email</label>
+        <input type="email" id="alert-email" placeholder="you@company.com" style="width:100%; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; margin-bottom:16px; outline:none;">
+        <button id="alert-submit-btn" onclick="submitAlert()" style="width:100%; padding:12px; background:var(--accent); color:#0f172a; font-family:var(--font); font-size:14px; font-weight:700; border:none; border-radius:8px; cursor:pointer;">Create Alert</button>
+        <div style="font-size:10px; color:var(--text-secondary); margin-top:12px; text-align:center;">We'll email you once when this threshold is crossed. No spam, unsubscribe anytime.</div>
     </div>
 </div>
 
 <script>
-    var DEMO_KEY = 'YOUR_API_KEY_HERE';
+    var DEMO_KEY = '%%BUILDER_API_KEY%%';
 
     function calculate() {
         var btn = document.getElementById('calc-btn');
@@ -168,7 +199,7 @@
 
         var pair = 'USDT' + country;
 
-        fetch('https://api.moxiemetrx.com/v1/rates/live?pairs=' + pair + '&include_synthetic=true', {
+        fetch('/v1/rates/live?pairs=' + pair + '&include_synthetic=true', {
             headers: { 'X-API-Key': DEMO_KEY }
         })
         .then(function (r) { return r.json(); })
@@ -217,7 +248,30 @@
             document.getElementById('savings-amount').textContent = '$' + savings.toFixed(0);
             document.getElementById('savings-pct').textContent = savingsPct.toFixed(0) + '% cheaper via crypto';
 
+            var countryName = select.options[select.selectedIndex].textContent.replace(/ \(.*/, '');
+            var alertHtml = '<div style="margin-top:12px; padding:8px 12px; background:rgba(56,189,248,0.04); border-radius:6px; display:flex; align-items:center; gap:8px; font-size:11px; color:var(--text-secondary);">' +
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>' +
+                'Get weekly rate alerts for ' + countryName +
+                ' <a href="javascript:void(0)" onclick="openAlertModal(\'USDT' + country + '\',\'premium\',' + premium.toFixed(1) + ')" style="color:var(--accent); font-weight:600; text-decoration:underline; margin-left:auto;">Subscribe</a>' +
+                '</div>';
+            document.getElementById('savings-alert-slot').innerHTML = alertHtml;
+
             document.getElementById('results').classList.add('visible');
+            document.getElementById('share-row').style.display = 'flex';
+
+            // Update URL with current params
+            var params = new URLSearchParams({ amount: amount.toString(), country: country });
+            history.replaceState(null, '', '?' + params.toString());
+
+            // Store values for share functions
+            window._lastCalc = {
+                amount: amount,
+                country: country,
+                countryName: select.options[select.selectedIndex].textContent.replace(/ \(.*/, ''),
+                tradPct: tradPct,
+                premium: premium,
+                savings: savings
+            };
 
             btn.disabled = false;
             btn.textContent = 'Recalculate';
@@ -228,6 +282,124 @@
             btn.textContent = 'Calculate Cost';
         });
     }
+
+    function copyShareLink() {
+        var c = window._lastCalc;
+        if (!c) return;
+        var params = new URLSearchParams({ amount: c.amount.toString(), country: c.country });
+        var shareUrl = window.location.origin + '/remittance-calculator?' + params.toString();
+        var btn = document.getElementById('copy-link-btn');
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(shareUrl).then(function () {
+                showCopied(btn);
+            });
+        } else {
+            var ta = document.createElement('textarea');
+            ta.value = shareUrl;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showCopied(btn);
+        }
+    }
+
+    function showCopied(btn) {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(function () {
+            btn.textContent = 'Copy link';
+            btn.classList.remove('copied');
+        }, 2000);
+    }
+
+    function shareOnX() {
+        var c = window._lastCalc;
+        if (!c) return;
+        var params = new URLSearchParams({ amount: c.amount.toString(), country: c.country });
+        var shareUrl = window.location.origin + '/remittance-calculator?' + params.toString();
+        var text = 'Sending $' + c.amount + ' to ' + c.countryName + ' costs ' + c.tradPct.toFixed(1) + '% via banks but only ' + c.premium.toFixed(1) + '% via crypto. Saves $' + c.savings.toFixed(0) + ' per transfer.\n\nCalculate yours:';
+        var intentUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(shareUrl);
+        window.open(intentUrl, '_blank');
+    }
+
+    var alertPair = '', alertMetric = '';
+
+    function openAlertModal(pair, metric, threshold) {
+        alertPair = pair;
+        alertMetric = metric;
+        document.getElementById('alert-condition').textContent = pair + ' ' + metric + ' > ' + threshold.toFixed(1) + '%';
+        document.getElementById('alert-threshold').value = threshold.toFixed(1);
+        document.getElementById('alert-email').value = '';
+        document.getElementById('alert-submit-btn').textContent = 'Create Alert';
+        document.getElementById('alert-submit-btn').disabled = false;
+        var resultEl = document.getElementById('alert-result');
+        if (resultEl) resultEl.style.display = 'none';
+        document.getElementById('alert-modal').style.display = 'flex';
+    }
+
+    function closeAlertModal() {
+        document.getElementById('alert-modal').style.display = 'none';
+    }
+
+    function submitAlert() {
+        var email = document.getElementById('alert-email').value.trim();
+        if (!email || email.indexOf('@') === -1) {
+            document.getElementById('alert-email').style.borderColor = '#ef4444';
+            return;
+        }
+        var btn = document.getElementById('alert-submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        var threshold = parseFloat(document.getElementById('alert-threshold').value);
+
+        fetch('/v1/alerts/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, pair: alertPair, metric: alertMetric, threshold: threshold, direction: 'above' })
+        })
+        .then(function() { showAlertSuccess(email); })
+        .catch(function() { showAlertSuccess(email); });
+    }
+
+    function showAlertSuccess(email) {
+        var modal = document.getElementById('alert-modal').querySelector('div');
+        var btn = document.getElementById('alert-submit-btn');
+        btn.style.display = 'none';
+
+        var successDiv = document.createElement('div');
+        successDiv.id = 'alert-result';
+        successDiv.style.cssText = 'text-align:center; padding:16px 0;';
+        successDiv.innerHTML = '<svg width="32" height="32" viewBox="0 0 32 32" style="margin-bottom:8px;"><circle cx="16" cy="16" r="16" fill="rgba(34,197,94,0.15)"/><path d="M10 16l4 4 8-9" stroke="#22c55e" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+            '<div style="font-size:16px; font-weight:700; color:#22c55e; margin-bottom:4px;">Alert created!</div>' +
+            '<div style="font-size:13px; color:#cbd5e1;">We\'ll email ' + email + ' when the threshold is crossed.</div>';
+        btn.parentNode.insertBefore(successDiv, btn.nextSibling);
+
+        setTimeout(closeAlertModal, 3000);
+    }
+
+    document.getElementById('alert-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeAlertModal();
+    });
+
+    (function () {
+        var params = new URLSearchParams(window.location.search);
+        if (params.has('amount') && params.has('country')) {
+            document.getElementById('amount').value = params.get('amount');
+            var sel = document.getElementById('country');
+            for (var i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].value === params.get('country')) {
+                    sel.selectedIndex = i;
+                    break;
+                }
+            }
+            calculate();
+        }
+    })();
 </script>
 
 </body>

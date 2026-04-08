@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <title>Cross-Exchange Arbitrage Scanner — moxiemetrx</title>
     <meta name="description" content="Live cross-exchange price spreads across 7 African exchanges. See where BTC/NGN, USDT/ZAR and other pairs price differently in real time.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -76,14 +77,41 @@
         .footer a:hover { color: var(--text); }
 
         .loading { text-align: center; padding: 48px; color: var(--text-secondary); }
+
+        .position-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .position-label { font-size: 12px; font-weight: 500; color: #cbd5e1; }
+        .pos-btn {
+            padding: 6px 14px; font-family: var(--font); font-size: 12px; font-weight: 500;
+            border: 1px solid var(--border); border-radius: 6px; background: transparent;
+            color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+        }
+        .pos-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .pos-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(56,189,248,0.1); }
+        .custom-pos { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
+        .custom-pos-label { font-size: 12px; color: var(--text-secondary); }
+        .custom-pos input {
+            width: 90px; padding: 5px 8px; font-family: var(--font); font-size: 12px;
+            background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+            color: var(--text); outline: none;
+        }
+        .custom-pos input:focus { border-color: var(--accent); }
+
+        .opp-pnl {
+            display: flex; justify-content: space-between; align-items: center; padding: 8px 0;
+            border-top: 1px dashed var(--border); margin-top: 8px;
+        }
+        .opp-pnl-label { font-size: 12px; color: var(--text-secondary); }
+        .opp-pnl-value { font-size: 16px; font-weight: 700; }
+
+        .opp-avg { font-size: 11px; color: var(--text-secondary); text-align: right; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <a href="/" class="logo">moxie<span>metrx</span></a>
-        <a href="https://moxiemetrx.com/demos" class="back-link">&larr; Demos</a>
+        <a href="/" class="logo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="28" height="28" style="vertical-align: middle; margin-right: 8px;"><defs><linearGradient id="icon-pulse" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.5"/><stop offset="40%" stop-color="#38bdf8" stop-opacity="1"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.5"/></linearGradient><linearGradient id="bg-fill" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1e3a5f"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs><rect x="0" y="0" width="40" height="40" rx="9" ry="9" fill="url(#bg-fill)"/><rect x="0.6" y="0.6" width="38.8" height="38.8" rx="8.4" ry="8.4" fill="none" stroke="#38bdf8" stroke-width="1.2" opacity="0.35"/><polyline points="6,30 10,30 14,10 19,25 24,7 29,27 33,17 36,17" fill="none" stroke="url(#icon-pulse)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="10" r="2" fill="#38bdf8"/><circle cx="24" cy="7" r="2" fill="#38bdf8"/><line x1="6" y1="34" x2="36" y2="34" stroke="#38bdf8" stroke-width="0.7" opacity="0.25"/></svg>moxie<span>metrx</span></a>
+        <a href="/demos" class="back-link">&larr; Demos</a>
     </div>
 
     <h1>Cross-Exchange Arbitrage Scanner</h1>
@@ -96,6 +124,18 @@
         <button class="sort-btn" onclick="sortBy('sources')">Most Sources</button>
     </div>
 
+    <div class="position-bar">
+        <span class="position-label">Position size</span>
+        <button class="pos-btn" onclick="setPosition(500, this)">$500</button>
+        <button class="pos-btn active" onclick="setPosition(1000, this)">$1,000</button>
+        <button class="pos-btn" onclick="setPosition(5000, this)">$5,000</button>
+        <button class="pos-btn" onclick="setPosition(10000, this)">$10,000</button>
+        <div class="custom-pos">
+            <span class="custom-pos-label">$</span>
+            <input type="number" id="custom-position" placeholder="Custom" oninput="onCustomPosition(this)">
+        </div>
+    </div>
+
     <div id="cards">
         <div class="loading">Scanning 7 exchanges for arbitrage opportunities...</div>
     </div>
@@ -104,25 +144,42 @@
         <strong>Not financial advice.</strong> These spreads are based on displayed mid-market prices, not executable order book prices.
         Actual execution includes exchange fees (0.1-0.5%), withdrawal fees, transfer time (10-60 min), and slippage.
         A 2% displayed spread may yield 0-1% after all costs. Always verify liquidity before trading.
+        <br><br>P&amp;L estimates are gross of fees. After exchange fees (0.1&ndash;0.5% per side), withdrawal costs, and transfer delays, net profit will be significantly lower.
     </div>
 
     <div class="cta">
-        <a href="https://moxiemetrx.com/signup" class="cta-btn">Get API Key — Build Your Own Scanner</a>
+        <a href="/signup" class="cta-btn">Get API Key — Build Your Own Scanner</a>
     </div>
 
     <div class="footer">
         <a href="/">Home</a>
         <a href="https://docs.moxiemetrx.com">Docs</a>
         <a href="https://docs.moxiemetrx.com/blog">Research</a>
-        <a href="https://moxiemetrx.com/demos">Demos</a>
+        <a href="/demos">Demos</a>
+    </div>
+</div>
+
+<div id="alert-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.85); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:32px; max-width:420px; width:90%; position:relative;">
+        <button onclick="closeAlertModal()" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-secondary); font-size:18px; cursor:pointer;">&times;</button>
+        <div style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:16px;">Set Rate Alert</div>
+        <div id="alert-condition" style="background:#0a0e14; border-radius:8px; padding:10px 14px; font-family:'SF Mono',monospace; font-size:13px; color:var(--accent); margin-bottom:16px;"></div>
+        <label style="display:block; font-size:12px; color:#cbd5e1; margin-bottom:6px;">Trigger when above (%)</label>
+        <input type="number" id="alert-threshold" step="0.1" style="width:100%; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; margin-bottom:16px; outline:none;">
+        <label style="display:block; font-size:12px; color:#cbd5e1; margin-bottom:6px;">Email</label>
+        <input type="email" id="alert-email" placeholder="you@company.com" style="width:100%; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; margin-bottom:16px; outline:none;">
+        <button id="alert-submit-btn" onclick="submitAlert()" style="width:100%; padding:12px; background:var(--accent); color:#0f172a; font-family:var(--font); font-size:14px; font-weight:700; border:none; border-radius:8px; cursor:pointer;">Create Alert</button>
+        <div style="font-size:10px; color:var(--text-secondary); margin-top:12px; text-align:center;">We'll email you once when this threshold is crossed. No spam, unsubscribe anytime.</div>
     </div>
 </div>
 
 <script>
-    var API_KEY = 'YOUR_API_KEY_HERE';
+    var API_KEY = '%%BUILDER_API_KEY%%';
     var ALL_PAIRS = 'BTCNGN,BTCZAR,ETHNGN,ETHZAR,USDTNGN,USDTZAR,XRPNGN,XRPZAR,SOLNGN,SOLZAR,BTCKES,USDTKES,USDCKES,USDCNGN,USDTGHS,BTCGHS,BTCUGX,USDTUGX,ETHKES';
     var results = [];
     var currentSort = 'spread';
+    var positionSize = 1000;
+    var customDebounceTimer = null;
 
     function spreadColor(pct) {
         if (pct >= 3) return '#22c55e';
@@ -134,6 +191,15 @@
         if (price > 1000000) return price.toLocaleString('en', {maximumFractionDigits: 0});
         if (price > 100) return price.toLocaleString('en', {maximumFractionDigits: 2});
         return price.toLocaleString('en', {maximumFractionDigits: 4});
+    }
+
+    function getAvgSpread(pair) {
+        var history = JSON.parse(localStorage.getItem('arb_history') || '{}');
+        var entries = history[pair];
+        if (!entries || entries.length < 60) return null;
+        var sum = 0;
+        for (var i = 0; i < entries.length; i++) { sum += entries[i].s; }
+        return sum / entries.length;
     }
 
     function renderCards() {
@@ -150,10 +216,40 @@
             var barWidth = Math.max((r.spread / maxSpread) * 100, 3);
             var sColor = spreadColor(r.spread);
 
+            var units = positionSize / r.cheapest.rate;
+            var revenue = units * r.dearest.rate;
+            var pnl = revenue - positionSize;
+            var pnlStr = (pnl >= 0 ? '+' : '-') + '$' + Math.abs(pnl).toFixed(2);
+            var pnlColor = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+
+            var avgSpread = getAvgSpread(r.pair);
+            var avgHtml = '';
+            if (avgSpread === null) {
+                avgHtml = '<div class="opp-avg">Avg: --</div>';
+            } else {
+                var diff = r.spread - avgSpread;
+                var avgLabel = '';
+                var avgLabelColor = '';
+                if (Math.abs(diff) <= 0.1) {
+                    avgLabel = 'at avg';
+                    avgLabelColor = 'var(--yellow)';
+                } else if (diff > 0) {
+                    avgLabel = 'above avg';
+                    avgLabelColor = 'var(--green)';
+                } else {
+                    avgLabel = 'below avg';
+                    avgLabelColor = 'var(--text-secondary)';
+                }
+                avgHtml = '<div class="opp-avg">Avg: ' + avgSpread.toFixed(2) + '% <span style="color:' + avgLabelColor + '">' + avgLabel + '</span></div>';
+            }
+
             html += '<div class="opp-card">' +
                 '<div class="opp-top">' +
                     '<span class="opp-pair">' + r.pair + '</span>' +
-                    '<span class="opp-spread" style="color:' + sColor + '">' + r.spread.toFixed(2) + '%</span>' +
+                    '<div>' +
+                        '<span class="opp-spread" style="color:' + sColor + '">' + r.spread.toFixed(2) + '%</span>' +
+                        avgHtml +
+                    '</div>' +
                 '</div>' +
                 '<div class="opp-detail">' +
                     '<div class="opp-side">' +
@@ -167,14 +263,47 @@
                         '<div class="opp-price">' + formatPrice(r.pair, r.dearest.rate) + '</div>' +
                     '</div>' +
                 '</div>' +
+                '<div class="opp-pnl">' +
+                    '<span class="opp-pnl-label">Est. gross P&amp;L</span>' +
+                    '<span class="opp-pnl-value" style="color:' + pnlColor + '">' + pnlStr + '</span>' +
+                '</div>' +
                 '<div class="opp-meta">' +
                     '<span class="opp-sources">' + r.sources.length + ' exchanges: ' + r.sources.map(function(s){return s.exchange}).join(', ') + '</span>' +
                 '</div>' +
-                '<div class="bar-bg"><div class="bar-fill" style="width:' + barWidth + '%; background:' + sColor + '"></div></div>' +
-            '</div>';
+                '<div class="bar-bg"><div class="bar-fill" style="width:' + barWidth + '%; background:' + sColor + '"></div></div>';
+
+            if (r.spread >= 2) {
+                html += '<div style="margin-top:8px; padding:8px 12px; background:rgba(56,189,248,0.04); border-radius:6px; display:flex; align-items:center; gap:8px; font-size:11px; color:var(--text-secondary);">' +
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>' +
+                    'Get notified when ' + r.pair + ' spread &gt; ' + Math.ceil(r.spread) + '%' +
+                    ' <a href="javascript:void(0)" onclick="openAlertModal(\'' + r.pair + '\',\'spread\',' + Math.ceil(r.spread) + ')" style="color:var(--accent); font-weight:600; text-decoration:underline; margin-left:auto;">Set alert</a>' +
+                '</div>';
+            }
+
+            html += '</div>';
         });
 
         document.getElementById('cards').innerHTML = html || '<div class="loading">No multi-source pairs found</div>';
+    }
+
+    function setPosition(amount, btn) {
+        positionSize = amount;
+        document.querySelectorAll('.pos-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        document.getElementById('custom-position').value = '';
+        renderCards();
+    }
+
+    function onCustomPosition(input) {
+        clearTimeout(customDebounceTimer);
+        customDebounceTimer = setTimeout(function() {
+            var val = parseFloat(input.value);
+            if (val > 0) {
+                positionSize = val;
+                document.querySelectorAll('.pos-btn').forEach(function(b) { b.classList.remove('active'); });
+                renderCards();
+            }
+        }, 300);
     }
 
     function sortBy(field) {
@@ -185,7 +314,7 @@
     }
 
     function fetchData() {
-        fetch('https://api.moxiemetrx.com/v1/rates/live?pairs=' + ALL_PAIRS + '&include_sources=true', {
+        fetch('/v1/rates/live?pairs=' + ALL_PAIRS + '&include_sources=true', {
             headers: { 'X-API-Key': API_KEY }
         })
         .then(function(r) { return r.json(); })
@@ -212,6 +341,14 @@
                 });
             });
 
+            var history = JSON.parse(localStorage.getItem('arb_history') || '{}');
+            results.forEach(function(r) {
+                if (!history[r.pair]) history[r.pair] = [];
+                history[r.pair].push({ t: Date.now(), s: r.spread });
+                if (history[r.pair].length > 43200) history[r.pair].shift();
+            });
+            localStorage.setItem('arb_history', JSON.stringify(history));
+
             renderCards();
             document.getElementById('update-time').textContent = 'Live data \u2014 ' + new Date().toLocaleTimeString() + ' \u2014 refreshes every 60s';
         })
@@ -219,6 +356,66 @@
             document.getElementById('cards').innerHTML = '<div class="loading" style="color:#ef4444;">Failed to load. Retrying...</div>';
         });
     }
+
+    var alertPair = '', alertMetric = '';
+
+    function openAlertModal(pair, metric, threshold) {
+        alertPair = pair;
+        alertMetric = metric;
+        document.getElementById('alert-condition').textContent = pair + ' ' + metric + ' > ' + threshold.toFixed(1) + '%';
+        document.getElementById('alert-threshold').value = threshold.toFixed(1);
+        document.getElementById('alert-email').value = '';
+        document.getElementById('alert-submit-btn').textContent = 'Create Alert';
+        document.getElementById('alert-submit-btn').disabled = false;
+        var resultEl = document.getElementById('alert-result');
+        if (resultEl) resultEl.style.display = 'none';
+        document.getElementById('alert-modal').style.display = 'flex';
+    }
+
+    function closeAlertModal() {
+        document.getElementById('alert-modal').style.display = 'none';
+    }
+
+    function submitAlert() {
+        var email = document.getElementById('alert-email').value.trim();
+        if (!email || email.indexOf('@') === -1) {
+            document.getElementById('alert-email').style.borderColor = '#ef4444';
+            return;
+        }
+        var btn = document.getElementById('alert-submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        var threshold = parseFloat(document.getElementById('alert-threshold').value);
+
+        fetch('/v1/alerts/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, pair: alertPair, metric: alertMetric, threshold: threshold, direction: 'above' })
+        })
+        .then(function() { showAlertSuccess(email); })
+        .catch(function() { showAlertSuccess(email); });
+    }
+
+    function showAlertSuccess(email) {
+        var modal = document.getElementById('alert-modal').querySelector('div');
+        var btn = document.getElementById('alert-submit-btn');
+        btn.style.display = 'none';
+
+        var successDiv = document.createElement('div');
+        successDiv.id = 'alert-result';
+        successDiv.style.cssText = 'text-align:center; padding:16px 0;';
+        successDiv.innerHTML = '<svg width="32" height="32" viewBox="0 0 32 32" style="margin-bottom:8px;"><circle cx="16" cy="16" r="16" fill="rgba(34,197,94,0.15)"/><path d="M10 16l4 4 8-9" stroke="#22c55e" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+            '<div style="font-size:16px; font-weight:700; color:#22c55e; margin-bottom:4px;">Alert created!</div>' +
+            '<div style="font-size:13px; color:#cbd5e1;">We\'ll email ' + email + ' when the threshold is crossed.</div>';
+        btn.parentNode.insertBefore(successDiv, btn.nextSibling);
+
+        setTimeout(closeAlertModal, 3000);
+    }
+
+    document.getElementById('alert-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeAlertModal();
+    });
 
     fetchData();
     setInterval(fetchData, 60000);
