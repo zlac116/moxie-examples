@@ -15,7 +15,7 @@ cd moxie-examples/arbitrage-scanner
 
 1. Get an API key at [moxiemetrx.com/signup](https://moxiemetrx.com/signup) (Builder tier recommended for source transparency)
 2. Open `index.html` in a text editor
-3. Replace `YOUR_API_KEY_HERE` with your key
+3. Replace `%%BUILDER_API_KEY%%` with your key
 4. Open `index.html` in a browser
 
 No build step, no dependencies, no server — just one HTML file.
@@ -55,4 +55,4 @@ These spreads are based on displayed mid-market prices, not executable order boo
 ## Links
 
 - [API docs](https://docs.moxiemetrx.com)
-- [Research: Why Single-Exchange Pricing Costs You Money](https://docs.moxiemetrx.com/blog/single-exchange-pricing)
+- [Research: South Africa vs Nigeria Market Efficiency](https://docs.moxiemetrx.com/blog/african-crypto-market-efficiency)

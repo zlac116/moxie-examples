@@ -15,7 +15,7 @@ cd moxie-examples/attestation-generator
 
 1. Get an Enterprise tier API key at [moxiemetrx.com/signup](https://moxiemetrx.com/signup) (certificates require Enterprise plan)
 2. Open `index.html` in a text editor
-3. Replace `YOUR_API_KEY_HERE` with your key
+3. Replace `%%ENTERPRISE_API_KEY%%` with your key
 4. Open `index.html` in a browser
 
 No build step, no dependencies, no server — just one HTML file.

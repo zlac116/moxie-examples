@@ -15,7 +15,7 @@ cd moxie-examples/premium-monitor
 
 1. Get an API key at [moxiemetrx.com/signup](https://moxiemetrx.com/signup) (Builder tier recommended for synthetic rate access)
 2. Open `index.html` in a text editor
-3. Replace `YOUR_API_KEY_HERE` with your key
+3. Replace `%%BUILDER_API_KEY%%` with your key
 4. Open `index.html` in a browser
 
 No build step, no dependencies, no server — just one HTML file.

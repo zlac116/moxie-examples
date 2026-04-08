@@ -15,7 +15,7 @@ cd moxie-examples/remittance-calculator
 
 1. Get a free API key at [moxiemetrx.com/signup](https://moxiemetrx.com/signup)
 2. Open `index.html` in a text editor
-3. Replace `YOUR_API_KEY_HERE` with your key
+3. Replace `%%BUILDER_API_KEY%%` with your key
 4. Open `index.html` in a browser
 
 No build step, no dependencies, no server — just one HTML file.
@@ -28,11 +28,11 @@ python3 -m http.server 8080
 
 ## How It Works
 
-- Fetches live USDT/NGN, USDT/ZAR, USDT/KES, USDT/GHS, USDT/UGX rates from the MoxieMetrx API
+- Fetches live USDT/NGN, USDT/ZAR, USDT/KES, USDT/GHS, USDT/UGX rates from the moxiemetrx API
 - Compares the stablecoin premium (crypto cost) vs World Bank average remittance costs (traditional cost)
 - Shows savings per transfer
 
 ## Links
 
 - [API docs](https://docs.moxiemetrx.com)
-- [Research: Crypto vs Traditional Remittances](https://docs.moxiemetrx.com/blog/crypto-remittances-africa)
+- [Research: The African Stablecoin Premium](https://docs.moxiemetrx.com/blog/stablecoin-premium-africa)
