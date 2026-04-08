@@ -47,8 +47,8 @@
         .rates-row .label { }
         .rates-row .value { font-family: 'SF Mono', monospace; color: #cbd5e1; }
 
-        .sparkline-wrap { height: 40px; margin: 10px 0; position: relative; }
-        .sparkline-label { font-size: 10px; color: var(--text-secondary); text-align: right; margin-top: 2px; }
+        .sparkline-wrap { height: 40px; margin: 12px 0 4px; position: relative; }
+        .sparkline-label { font-size: 10px; color: var(--text-secondary); text-align: right; margin-top: 2px; margin-bottom: 8px; }
 
         .bar-bg { height: 8px; background: #0f172a; border-radius: 4px; overflow: hidden; }
         .bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
@@ -110,20 +110,6 @@
         <a href="https://docs.moxiemetrx.com/blog">Research</a>
         <a href="/demos">Demos</a>
         <a href="/status">Status</a>
-    </div>
-</div>
-
-<div id="alert-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.85); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:32px; max-width:420px; width:90%; position:relative;">
-        <button onclick="closeAlertModal()" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-secondary); font-size:18px; cursor:pointer;">&times;</button>
-        <div style="font-size:18px; font-weight:700; color:var(--text); margin-bottom:16px;">Set Rate Alert</div>
-        <div id="alert-condition" style="background:#0a0e14; border-radius:8px; padding:10px 14px; font-family:'SF Mono',monospace; font-size:13px; color:var(--accent); margin-bottom:16px;"></div>
-        <label style="display:block; font-size:12px; color:#cbd5e1; margin-bottom:6px;">Trigger when above (%)</label>
-        <input type="number" id="alert-threshold" step="0.1" style="width:100%; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; margin-bottom:16px; outline:none;">
-        <label style="display:block; font-size:12px; color:#cbd5e1; margin-bottom:6px;">Email</label>
-        <input type="email" id="alert-email" placeholder="you@company.com" style="width:100%; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; margin-bottom:16px; outline:none;">
-        <button id="alert-submit-btn" onclick="submitAlert()" style="width:100%; padding:12px; background:var(--accent); color:#0f172a; font-family:var(--font); font-size:14px; font-weight:700; border:none; border-radius:8px; cursor:pointer;">Create Alert</button>
-        <div style="font-size:10px; color:var(--text-secondary); margin-top:12px; text-align:center;">We'll email you once when this threshold is crossed. No spam, unsubscribe anytime.</div>
     </div>
 </div>
 
@@ -205,14 +191,6 @@
                     '</div>' +
                     (sparklineCache[r.country.pair] || '') +
                     '<div class="bar-bg"><div class="bar-fill" style="width:' + barWidth + '%; background:' + pColor + '"></div></div>';
-
-                if (r.premium >= 3) {
-                    html += '<div style="margin-top:8px; padding:8px 12px; background:rgba(56,189,248,0.04); border-radius:6px; display:flex; align-items:center; gap:8px; font-size:11px; color:var(--text-secondary);">' +
-                        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>' +
-                        'Alert me when ' + r.country.name + ' premium crosses ' + Math.ceil(r.premium) + '%' +
-                        ' <a href="javascript:void(0)" onclick="openAlertModal(\'' + r.country.pair + '\',\'premium\',' + Math.ceil(r.premium) + ')" style="color:var(--accent); font-weight:600; text-decoration:underline; margin-left:auto;">Set alert</a>' +
-                    '</div>';
-                }
 
                 html += '</div>';
             });
@@ -298,66 +276,6 @@
             if (hasAny) fetchPremiums();
         });
     }
-
-    var alertPair = '', alertMetric = '';
-
-    function openAlertModal(pair, metric, threshold) {
-        alertPair = pair;
-        alertMetric = metric;
-        document.getElementById('alert-condition').textContent = pair + ' ' + metric + ' > ' + threshold.toFixed(1) + '%';
-        document.getElementById('alert-threshold').value = threshold.toFixed(1);
-        document.getElementById('alert-email').value = '';
-        document.getElementById('alert-submit-btn').textContent = 'Create Alert';
-        document.getElementById('alert-submit-btn').disabled = false;
-        var resultEl = document.getElementById('alert-result');
-        if (resultEl) resultEl.style.display = 'none';
-        document.getElementById('alert-modal').style.display = 'flex';
-    }
-
-    function closeAlertModal() {
-        document.getElementById('alert-modal').style.display = 'none';
-    }
-
-    function submitAlert() {
-        var email = document.getElementById('alert-email').value.trim();
-        if (!email || email.indexOf('@') === -1) {
-            document.getElementById('alert-email').style.borderColor = '#ef4444';
-            return;
-        }
-        var btn = document.getElementById('alert-submit-btn');
-        btn.disabled = true;
-        btn.textContent = 'Saving...';
-
-        var threshold = parseFloat(document.getElementById('alert-threshold').value);
-
-        fetch('/v1/alerts/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, pair: alertPair, metric: alertMetric, threshold: threshold, direction: 'above' })
-        })
-        .then(function() { showAlertSuccess(email); })
-        .catch(function() { showAlertSuccess(email); });
-    }
-
-    function showAlertSuccess(email) {
-        var modal = document.getElementById('alert-modal').querySelector('div');
-        var btn = document.getElementById('alert-submit-btn');
-        btn.style.display = 'none';
-
-        var successDiv = document.createElement('div');
-        successDiv.id = 'alert-result';
-        successDiv.style.cssText = 'text-align:center; padding:16px 0;';
-        successDiv.innerHTML = '<svg width="32" height="32" viewBox="0 0 32 32" style="margin-bottom:8px;"><circle cx="16" cy="16" r="16" fill="rgba(34,197,94,0.15)"/><path d="M10 16l4 4 8-9" stroke="#22c55e" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
-            '<div style="font-size:16px; font-weight:700; color:#22c55e; margin-bottom:4px;">Alert created!</div>' +
-            '<div style="font-size:13px; color:#cbd5e1;">We\'ll email ' + email + ' when the threshold is crossed.</div>';
-        btn.parentNode.insertBefore(successDiv, btn.nextSibling);
-
-        setTimeout(closeAlertModal, 3000);
-    }
-
-    document.getElementById('alert-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeAlertModal();
-    });
 
     fetchPremiums();
     fetchSparklines();
